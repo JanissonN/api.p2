@@ -1,37 +1,60 @@
-const bcrypt = require('bcryptjs');
 const { SysUser } = require('../models');
+const bcrypt = require('bcryptjs');
 
-const getAllUsers = (req, res) => {
-    // Sua lógica para obter todos os usuários
-    res.send('Todos os usuários');
-    console.log("vitin");
-  };
-  
-  const getUserById = (req, res) => {
-    // Sua lógica para obter um usuário por ID
-    res.send(`Usuário com ID: ${req.params.id}`);
-  };
-  
-  const createUser = (req, res) => {
-    // Sua lógica para criar um novo usuário
-    res.send('Usuário criado');
-  };
-  
-  const updateUser = (req, res) => {
-    // Sua lógica para atualizar um usuário
-    res.send(`Usuário com ID: ${req.params.id} atualizado`);
-  };
-  
-  const deleteUser = (req, res) => {
-    // Sua lógica para deletar um usuário
-    res.send(`Usuário com ID: ${req.params.id} deletado`);
-  };
-  
-  // Exporte as funções para uso no sysUserRoutes.js
-  module.exports = {
-    getAllUsers,
-    getUserById,
-    createUser,
-    updateUser,
-    deleteUser,
-  };
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await SysUser.findAll();
+        res.status(200).json(users);
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching users', error: err.message });
+    }
+};
+
+exports.createUser = async (req, res) => {
+    const { username, password, role } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = await SysUser.create({ username, password: hashedPassword, role });
+        res.status(201).json(newUser);
+    } catch (err) {
+        res.status(500).json({ message: 'Error creating user', error: err.message });
+    }
+};
+
+exports.updateUser = async (req, res) => {
+    const { id } = req.params;
+    const { username, password, role } = req.body;
+    try {
+        const user = await SysUser.findByPk(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (password) {
+            user.password = await bcrypt.hash(password, 10);
+        }
+        if (username) user.username = username;
+        if (role) user.role = role;
+
+        await user.save();
+        res.status(200).json(user);
+    } catch (err) {
+        res.status(500).json({ message: 'Error updating user', error: err.message });
+    }
+};
+
+exports.deleteUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await SysUser.findByPk(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        await user.destroy();
+        res.status(204).send();
+    } catch (err) {
+        res.status(500).json({ message: 'Error deleting user', error: err.message });
+    }
+};
+

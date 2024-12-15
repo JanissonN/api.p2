@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { SysUser } = require('../models');
 const { secret } = require('../config/jwtConfig');
 
-exports.login = async (req, res) => {
+const login = async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await SysUser.findOne({ where: { login_email: username } });
@@ -16,5 +16,7 @@ exports.login = async (req, res) => {
         res.json({ token });
     } catch (err) {
         res.status(500).json({ message: 'Internal server error', error: err.message });
-    }
+    }  
 };
+
+module.exports = { login };
