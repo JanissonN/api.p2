@@ -11,10 +11,10 @@ exports.getAllUsers = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
-    const { username, password, role } = req.body;
+    const { name, login_email, password, user_type} = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await SysUser.create({ username, password: hashedPassword, role });
+        const newUser = await SysUser.create({ name, login_email, password: hashedPassword, user_type });
         res.status(201).json(newUser);
     } catch (err) {
         res.status(500).json({ message: 'Error creating user', error: err.message });
